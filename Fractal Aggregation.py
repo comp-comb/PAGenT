@@ -1,6 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+import customtkinter
 
 def center_of_mass(particle_list, x, y, z): # This is a function that finds the average of the coordinates
     cm_x = sum(x) / len(particle_list) # Finds the average x coordinate
@@ -59,7 +60,7 @@ def plot_spheres(centers, radii): # Plots the particles using matplotlib
         z = radii * np.cos(v) + center[2] # Creates the z coordinate for a particle with the correct radius
 
         color = np.random.choice(['g', 'b', 'r', 'y']) # Chooses a random color for the particles
-        alpha = 0.5 * np.random.random() + 0.5 # Finds a random alpha
+        alpha = 0.5 # Sets alpha (transparency)
 
         ax.plot_surface(x, y, z, color=color, alpha=alpha) # Plots the particle using the coordinates with the correct radius and the random color and alpha
 
@@ -67,21 +68,20 @@ def plot_spheres(centers, radii): # Plots the particles using matplotlib
     ax.set_ylabel('Y') # Labels the Y axis as Y
     ax.set_zlabel('Z') # Labels the Z axis as Z
     ax.set_title('Spheres') # Titles the plot as Spheres
-    ax.set_aspect('auto') # Sets the rate that the axes changes to change automatically
+    ax.set_aspect('equal') # Sets the rate that the axes changes to change automatically
 
     plt.show() # Finally, Shows the plot
 
 
 def fractal_aggregation_using_gamma(): # This aggregation methods uses gamma to find intersecting particles
-    n_p = int(input('Number of Particles? ')) # Asks the user how many particles they want to place
-    rp = float(input('Radius of Particles? ')) # Asks the user what they want the radius of the particle to be
-    df_t = float(input('What is The Fractal Dimension (1-3)? ')) # Ask the user what they want the target fractal dimension to be
+    global n_p # Asks the user how many particles they want to place
+    global rp # Asks the user what they want the radius of the particle to be
+    global df_t # Ask the user what they want the target fractal dimension to be
+
 
     particle_list = [] # Creates a list for the particles to be placed
     particle_list.append([0, 0, 0]) # Places a particle in the center of the plot
-    # plot_spheres(particle_list, rp)
     particle_list.append(sphere_surface_placement(0, 0, 0, rp)) # Finds another particle to place on the surface of the original particle
-    # plot_spheres(particle_list, rp)
     max_try = 20 # Sets the max number of times the program will try a particle and try to find a particle
 
 
@@ -107,12 +107,6 @@ def fractal_aggregation_using_gamma(): # This aggregation methods uses gamma to 
 
             cm = center_of_mass(particle_list, x, y, z) # Finds the current center of mass of the particle
             gm = gamma(len(particle_list), rp, df_t) # Finds the current gamma of the particle
-            rog = radius_of_gyration(particle_list, cm) # Finds the current radius of gyration of the particle
-
-            # print('gamma:', gm)
-            # print('Number of Particles:', len(particle_list))
-            # print('Center of Mass:', cm)
-            # print('Radius of Gyration:', rog)
 
             intersecting_circles(particle_list, rp, intersecting_list, cm, gm) # Finds the particles that are interesting
             ran_num = random.randrange(len(intersecting_list)) # Chooses a random sphere in the interesting particle list
@@ -154,15 +148,14 @@ def fractal_aggregation_using_gamma(): # This aggregation methods uses gamma to 
     print('Final Radius of Gyration:', rog_final) # Prints the radius of gyration
     df = fractal_dimension(n_p, rp, rog_final) # Finds the final fractal dimension
     print('Fractal Dimension:', df) # Prints the final fractal dimension
-    print('Particle List:', particle_list) # Prints the list of particles
-    # print('This is Gamma')
-    # print('First Distance Between Two Particles:', distance(particle_list[1][0], particle_list[1][1], particle_list[1][2], particle_list[2][0], particle_list[2][1], particle_list[2][2]))
-    # print('Second Distance Between Two Particles:', distance(particle_list[0][0], particle_list[0][1], particle_list[0][2], particle_list[1][0], particle_list[1][1], particle_list[1][2]))
+    for i in particle_list: # Prints the list of particles
+        print('', i ,'')
+
     plot_spheres(particle_list, rp) # Finally, plots the particles and shows that plot
 
 def fractal_aggregation_using_radius_of_gyration(): # This aggregation methods uses radius of gyration to find intersecting particles
-    n_p = int(input('Number of Particles? ')) # Asks the user the number of particles they want to create
-    rp = float(input('Radius of Particles? ')) # Asks teh use what they want the radius of the particles to be
+    global n_p # Asks the user the number of particles they want to create
+    global rp # Asks teh use what they want the radius of the particles to be
 
 
     particle_list = [] # Creates a list for those particles
@@ -233,19 +226,140 @@ def fractal_aggregation_using_radius_of_gyration(): # This aggregation methods u
     print('Final Radius of Gyration:', rog_final) # Prints the final radius of gyration
     df = fractal_dimension(n_p, rp, rog_final) # Finds the fractal dimension
     print('Fractal Dimension:', df) # Prints the fractal dimension
-    print('Particle List:', particle_list) # Prints the particle list
-    # print('This is ROG')
-    # print('First Distance Between Two Spheres:', distance(particle_list[1][0], particle_list[1][1], particle_list[1][2], particle_list[2][0], particle_list[2][1], particle_list[2][2]))
-    # print('Second Distance Between Two Spheres:', distance(particle_list[0][0], particle_list[0][1], particle_list[0][2], particle_list[1][0], particle_list[1][1], particle_list[1][2]))
+    for i in particle_list: # Prints the particle list
+        print('', i ,'')
+
     plot_spheres(particle_list, rp) # Finally, plots the particles and shows the plot
 
+
 kf = 1.5 # Sets the kf for the whole program
-print('Do you want to generate an aggregate particle via method 1 that uses radius of gyration as a reference radius for growth (1)') # Prints the following text
-print('or method 2 that attempts to generate an aggregate with a target fractal dimension (2)?') # Prints the following text
-response = int(input()) # The user types whether they want option 1 or 2
+customtkinter.set_appearance_mode('dark') # Sets the appearance for the GUI to dark mode
+customtkinter.set_default_color_theme('dark-blue') # Sets the color for the widgets to dark blue
 
-if response == 1: # If the user chooses option 1
-    fractal_aggregation_using_radius_of_gyration() # The radius of gyration aggregation function is called
+root = customtkinter.CTk() # This is the GUI pop-up
+root.geometry('500x300') # Sets the dimensions for the window that will pop up (in pixels)
+root.title('Fractal Aggregation') # Sets the title for the pop-up window
 
-elif response == 2: # If the user chooses option 2
-    fractal_aggregation_using_gamma() # The gamma aggregation function is called
+frame = customtkinter.CTkFrame(master=root) # Makes a frame inside the root window
+frame.pack(pady = 20, padx = 60, fill = 'both', expand = 'true') # Makes the frame appear
+
+text1 = customtkinter.CTkLabel(master = frame, text = 'Do you want to generate an aggregate particle via method 1 that'
+                              , width = 0, height = 0, corner_radius = 5) # When the window opens, this text will display for the user
+text1.pack(pady = 0, padx = 0)
+text2 = customtkinter.CTkLabel(master = frame, text = 'uses radius of gyration as a reference radius for growth (1) '
+                              , width = 0, height = 0, corner_radius = 5) # When the window opens, this text will display for the user
+text2.pack(pady = 0, padx = 0)
+text3 = customtkinter.CTkLabel(master = frame, text = 'or method 2 that attempts to generate an aggregate'
+                              , width = 0, height = 0, corner_radius = 5) # When the window opens, this text will display for the user
+text3.pack(pady = 0, padx = 0)
+text4 = customtkinter.CTkLabel(master = frame, text = 'with a target fractal dimension (2)?'
+                              , width = 0, height = 0, corner_radius = 5) # When the window opens, this text will display for the user
+text4.pack(pady = 0, padx = 0)
+
+function_input = customtkinter.CTkLabel(master=frame, text='Number of Particles'
+                                         , width=0, height=0, corner_radius=5) # When this funtion is called, this text will display for the user
+function_input.pack() # Declares the position for function_input
+function_input.pack_forget() # Hides function_input
+
+def option_1(): # A list of commands that button 1 will go through when it is clicked
+
+    text1.pack_forget() # Hides text
+    text2.pack_forget() # Hides text
+    text3.pack_forget() # Hides text
+    text4.pack_forget() # Hides text
+    button1.pack_forget() # Hides button
+    button2.pack_forget() # Hides button
+    entry.pack() # Declares the entry box
+    entry.place(x=120, y=100) # Sets the position in the frame
+    rog_enter_button1.pack() # Declares the submit button
+    rog_enter_button1.place(x=120, y=150) # Sets the position in the frame
+    function_input.pack() # Declares the label
+    function_input.place(x=120, y=50) # Sets the position in the frame
+
+button1 = customtkinter.CTkButton(master = frame, text = 'Option 1 (ROG)', command = option_1) # The button will pop up when the window is opened, and once clicked, it will run the option 1 function
+button1.pack(pady = 50, padx = 10) # Declares the button
+
+def option_2(): # A list of commands that button 2 will go through when it is clicked
+
+    text1.pack_forget() # Hides text
+    text2.pack_forget() # Hides text
+    text3.pack_forget() # Hides text
+    text4.pack_forget() # Hides text
+    button1.pack_forget() # Hides button
+    button2.pack_forget() # Hides button
+    entry.pack() # Declares the entry box
+    entry.place(x=120, y=100) # Sets the position in the frame
+    gamma_enter_button1.pack() # Declares the submit button
+    gamma_enter_button1.place(x=120, y=150) # Sets the position in the frame
+    function_input.pack() # Declares the label
+    function_input.place(x=120, y=50) # Sets the position in the frame
+
+button2 = customtkinter.CTkButton(master = frame, text = 'Option 2 (Gamma)', command = option_2) # The button will pop up when the window is opened, and once clicked, it will run the option 2 function
+button2.pack(pady = 0, padx = 10) # Declares the button
+
+entry = customtkinter.CTkEntry(master = frame, placeholder_text = 'Click Here') # This is will make an entry box for the user to submit their numbers, when asked
+entry.pack() # Declares the entry box
+entry.pack_forget() # Hides the entry box
+
+# Radius of Gyration's buttons
+def rog_enter_button_command1(): # This will be run after the user has clicked the button for the first prompt
+    global n_p # Sets the variable in this function to be a global variable, which can be used throughout different functions
+    n_p = int(entry.get()) # Sets the global n_p to whatever the user typed
+    function_input.configure(text = 'Radius of Particles') # Changes the text of the label
+    rog_enter_button1.pack_forget() # Hides the first button
+    entry.delete(0, 1000000000) # Deletes all the characters that the user typed in
+    rog_enter_button2.pack() # Declares the second button
+    rog_enter_button2.place(x=120, y=150) # Sets the position of the second button
+
+rog_enter_button1 = customtkinter.CTkButton(master = frame, text = 'SUBMIT', command = rog_enter_button_command1) # This is the first button for the first ROG prompt
+rog_enter_button1.pack() # Declares the button
+rog_enter_button1.pack_forget() # Hides the button
+
+def rog_enter_button_command2(): # This will be run after the user has clicked the button for the second prompt
+    global rp # Sets the variable in this function to be a global variable, which can be used throughout different functions
+    rp = float(entry.get()) # Sets the global rp to whatever the user typed
+    root.destroy() # Closes the GUI
+    fractal_aggregation_using_radius_of_gyration() # Runs the radius of gyration aggregation method using the variable gathered
+
+rog_enter_button2 = customtkinter.CTkButton(master = frame, text = 'SUBMIT', command = rog_enter_button_command2) # This is the second button for the second ROG prompt
+rog_enter_button2.pack() # Declares the button
+rog_enter_button2.pack_forget() # Hides the button
+
+# Gamma's buttons
+def gamma_enter_button_command1(): # This will be run after the user has clicked the button for the first prompt
+    global n_p # Sets the variable in this function to be a global variable, which can be used throughout different functions
+    n_p = int(entry.get()) # Sets the global n_p to whatever the user typed
+    function_input.configure(text = 'Radius of Particles') # Changes the text of the label
+    gamma_enter_button1.pack_forget() # Hides the first button
+    entry.delete(0, 1000000000) # Deletes all the characters that the user typed in
+    gamma_enter_button2.pack() # Declares the second button
+    gamma_enter_button2.place(x=120, y=150) # Sets the position of the second button
+
+gamma_enter_button1 = customtkinter.CTkButton(master = frame, text = 'SUBMIT', command = gamma_enter_button_command1) # This is the first button for the first gamma prompt
+gamma_enter_button1.pack() # Declares the button
+gamma_enter_button1.pack_forget() # Hides the button
+
+def gamma_enter_button_command2(): # This will be run after the user has clicked the button for the second prompt
+    global rp # Sets the variable in this function to be a global variable, which can be used throughout different functions
+    rp = float(entry.get()) # Sets the global rp to whatever the user typed
+    function_input.configure(text = 'Fractal Dimension (1.5-3)') # Changes the text of the label
+    gamma_enter_button2.pack_forget() # Hides the second button
+    entry.delete(0, 1000000000) # Deletes all the characters that the user typed in
+    gamma_enter_button3.pack() # Declares the third button
+    gamma_enter_button3.place(x=120, y=150) # Sets the position of the third button
+
+gamma_enter_button2 = customtkinter.CTkButton(master = frame, text = 'SUBMIT', command = gamma_enter_button_command2) # This is the second button for the second gamma prompt
+gamma_enter_button2.pack() # Declares the button
+gamma_enter_button2.pack_forget() # Hides the button
+
+def gamma_enter_button_command3(): # This will be run after the user has clicked the button for the third prompt
+    global df_t # Sets the variable in this function to be a global variable, which can be used throughout different functions
+    df_t = float(entry.get()) # Sets the global df_t to whatever the user typed
+    root.destroy() # Closes the GUI
+    fractal_aggregation_using_gamma() # Runs the gamma aggregation method using the variable gathered
+
+gamma_enter_button3 = customtkinter.CTkButton(master = frame, text = 'SUBMIT', command = gamma_enter_button_command3) # This is the third button for the third gamma prompt
+gamma_enter_button3.pack() # Declares the button
+gamma_enter_button3.pack_forget() # Hides the button
+
+root.mainloop() # Tells Python to run the GUI
