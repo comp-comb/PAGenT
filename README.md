@@ -31,7 +31,15 @@ Get started with PAGenT by following these steps:
 
 ![Screenshot 2025-03-17 at 10 25 08 AM](https://github.com/user-attachments/assets/4abecf6b-c1e3-4538-9abd-af3f3de3df86)
 
-
+## To Cite PAGent: ##
+   ```bash
+   @misc{PAGenT-v0.2a,
+      title = {{PAGenT: Particle Aggregate Generation Tool. v0.2.0-alpha}},
+      author = {Gray, I. and Mukut. K. M. and Day, T. and Roy, S. P.},
+      year = {2025},
+      url = {https://github.com/comp-comb/PAGenT}
+   }
+   ```
 ## Current Status
 
 > **Note:** This is an initial, untested release. Contributions, bug reports, and feedback are highly appreciated!
