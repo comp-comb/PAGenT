@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<geometry_complex date="2025/03/01 20:20:24" version="1.00">
+  <data_particle aggregation="18.9174 [ms]" algorithm="DLA (off-grid)" brick="0">
+    <particle ID="0" type="sphere">
+      <radius> 29.85298878036595 </radius>
+      <position> 0.0 , 0.0 , 0.0 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="1" type="sphere">
+      <radius> 28.214459298340707 </radius>
+      <position> 32.57487719426863 , -14.49327046247137 , 45.8328595509228 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="2" type="sphere">
+      <radius> 23.003759269110514 </radius>
+      <position> 61.883009302597884 , -50.7779773849513 , 66.99318445669932 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="3" type="sphere">
+      <radius> 25.497888706189634 </radius>
+      <position> 46.5350845255058 , 31.297390392725397 , 70.19151959098338 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="4" type="sphere">
+      <radius> 23.524277579457898 </radius>
+      <position> 29.970768819674316 , -84.34215771379526 , 62.530794948241 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="5" type="sphere">
+      <radius> 25.88223491147842 </radius>
+      <position> -25.656278594575703 , -32.88525646876427 , -36.96931750459763 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="6" type="sphere">
+      <radius> 25.198077096694043 </radius>
+      <position> 13.687473532301343 , -99.1461146742918 , 19.061667983702414 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="7" type="sphere">
+      <radius> 25.990131242338645 </radius>
+      <position> -21.137647393129352 , -108.91458907771042 , 55.283491989995404 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="8" type="sphere">
+      <radius> 29.637530702391416 </radius>
+      <position> -1.070798290460072 , -157.18980185787677 , 36.276593961382616 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="9" type="sphere">
+      <radius> 28.732046090721752 </radius>
+      <position> -3.4143319970008115 , -97.65491821531802 , -32.06330408325445 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="10" type="sphere">
+      <radius> 24.541350470913294 </radius>
+      <position> 23.04110354932636 , -43.41313362339062 , -29.206151992277018 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="11" type="sphere">
+      <radius> 24.9846347976729 </radius>
+      <position> -50.815174236333235 , -91.78238059686734 , -56.6428741295705 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="12" type="sphere">
+      <radius> 22.63330937091747 </radius>
+      <position> 24.77776862779452 , 14.664833499386209 , 109.77168489404113 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="13" type="sphere">
+      <radius> 28.330690482108366 </radius>
+      <position> -20.618380022993993 , -42.6254984707954 , -90.06158195563785 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="14" type="sphere">
+      <radius> 26.79596230804984 </radius>
+      <position> -10.997838952685687 , -16.503815486340432 , 95.91982139652593 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="15" type="sphere">
+      <radius> 19.1323198429215 </radius>
+      <position> 92.82544295001951 , -34.1220296146521 , 43.74249914150661 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="16" type="sphere">
+      <radius> 25.83482249194782 </radius>
+      <position> -42.81738661043676 , -82.4439684325202 , -119.31216063818447 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="17" type="sphere">
+      <radius> 26.84449829761968 </radius>
+      <position> -18.197665049354388 , 32.53815955339944 , 42.71672039987766 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="18" type="sphere">
+      <radius> 26.19433007868954 </radius>
+      <position> 43.873673213266045 , -108.22534085052598 , -57.92867724408588 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="19" type="sphere">
+      <radius> 23.018134995847173 </radius>
+      <position> -48.02915523016513 , -133.9194613794961 , 87.73982154333682 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="20" type="sphere">
+      <radius> 25.96582259458601 </radius>
+      <position> -14.93308052645905 , 11.258596155018076 , -86.55543743998352 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="21" type="sphere">
+      <radius> 29.995096326812842 </radius>
+      <position> -34.44404329510525 , 57.76665491520402 , -62.30781384825421 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="22" type="sphere">
+      <radius> 25.28074244638095 </radius>
+      <position> -15.32723479814002 , 50.823065629239316 , -119.12394718723047 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="23" type="sphere">
+      <radius> 24.518392400080028 </radius>
+      <position> -56.5866128066458 , -118.28414809178426 , -151.8903156338116 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="24" type="sphere">
+      <radius> 22.261996076205886 </radius>
+      <position> -86.42520470211983 , -122.93840341213061 , 66.39854647195287 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="25" type="sphere">
+      <radius> 24.73588831552479 </radius>
+      <position> -65.86879475523028 , -132.62862439650416 , 132.01766865537707 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="26" type="sphere">
+      <radius> 26.904217698357307 </radius>
+      <position> 49.20780586416166 , -160.98640204651744 , 10.691107751132972 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="27" type="sphere">
+      <radius> 28.11427912725643 </radius>
+      <position> -106.51350758654198 , -134.93718894312335 , -151.46661621446404 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="28" type="sphere">
+      <radius> 29.330467215311028 </radius>
+      <position> 84.70543482921177 , -180.01901211373197 , -28.55195380569832 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="29" type="sphere">
+      <radius> 22.959385337760008 </radius>
+      <position> 120.05743337943302 , -53.7469829688329 , 18.345815323381803 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="30" type="sphere">
+      <radius> 23.6244844069936 </radius>
+      <position> 99.60891798975113 , -212.01885233609565 , 10.92111698701348 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="31" type="sphere">
+      <radius> 24.3282684887934 </radius>
+      <position> 135.5649047463835 , -165.70778410501327 , -19.183763422125054 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="32" type="sphere">
+      <radius> 24.978145556766876 </radius>
+      <position> 53.42451490370077 , -220.40529064598906 , -10.116173994624564 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="33" type="sphere">
+      <radius> 24.77979716614289 </radius>
+      <position> -132.77489095673977 , -137.68940079664347 , -197.29835610492285 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="34" type="sphere">
+      <radius> 24.64548811182536 </radius>
+      <position> 29.197609835811463 , -148.54260789866817 , -85.20170890855495 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="35" type="sphere">
+      <radius> 26.68618415065163 </radius>
+      <position> 160.30358946353456 , -55.072174510620975 , 47.3832628464223 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="36" type="sphere">
+      <radius> 23.67125603007167 </radius>
+      <position> -95.2900498657502 , -169.89995427010956 , 122.61079128623115 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="37" type="sphere">
+      <radius> 22.70062807882804 </radius>
+      <position> -62.666295952112335 , 28.70729787432618 , 21.208933133885658 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="38" type="sphere">
+      <radius> 28.05660645028334 </radius>
+      <position> -59.28764246659154 , -54.9087098026543 , -162.61142528243187 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="39" type="sphere">
+      <radius> 21.82600792505591 </radius>
+      <position> -7.758638779042702 , 98.48864739986706 , -44.55857834886926 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="40" type="sphere">
+      <radius> 34.19016506492386 </radius>
+      <position> -123.03446539947527 , -179.7714350613485 , 72.80371020361981 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="41" type="sphere">
+      <radius> 24.10420837950789 </radius>
+      <position> -149.18225298412375 , -133.3412242788275 , -243.14088910035372 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="42" type="sphere">
+      <radius> 22.780488727222167 </radius>
+      <position> 30.81821470340149 , -184.03239152630871 , -116.6194137580947 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="43" type="sphere">
+      <radius> 25.655190626381934 </radius>
+      <position> 166.57913936489862 , -91.59402505363256 , 84.34799496970606 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="44" type="sphere">
+      <radius> 24.511997132785794 </radius>
+      <position> -82.87616875127702 , 47.26089826281995 , 59.63232359311289 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="45" type="sphere">
+      <radius> 26.538586713280818 </radius>
+      <position> -87.02860113685648 , 72.32713192516472 , -47.5120676677342 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="46" type="sphere">
+      <radius> 27.168969280087524 </radius>
+      <position> -134.63062640466455 , 95.82428067755109 , -39.36143807449794 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="47" type="sphere">
+      <radius> 23.244256665460647 </radius>
+      <position> -167.35238888779435 , -154.55943427781804 , -281.37060095831123 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="48" type="sphere">
+      <radius> 27.075919195989275 </radius>
+      <position> -170.45304197613808 , -88.82732558421017 , -229.52208524941597 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="49" type="sphere">
+      <radius> 26.042770809175416 </radius>
+      <position> -31.165111659327003 , 63.287064109776665 , -166.32472485377724 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="50" type="sphere">
+      <radius> 24.803453138845118 </radius>
+      <position> -84.89477493535537 , 49.825491982968906 , 108.8396576461195 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="51" type="sphere">
+      <radius> 19.545164450671862 </radius>
+      <position> -102.81014613780536 , 76.10155059820968 , 32.95111660964611 </position>
+      <refraction> 1 </refraction>
+    </particle>
+    <particle ID="52" type="sphere">
+      <radius> 26.570026054442252 </radius>
+      <position> 132.410123447509 , -117.85908545554112 , 113.84542217488469 </position>
+      <refraction> 1 </refraction>
+    </particle>
+  </data_particle>
+  <data_connector/>
+  <software>
+    <OS> Windows 10 - 10.0 / amd64 </OS>
+    <JVM_compiler> HotSpot 64-Bit Tiered Compilers </JVM_compiler>
+    <JVM_vendor> Oracle Corporation / 25.411-b09 </JVM_vendor>
+    <JVM_name> Java HotSpot(TM) 64-Bit Server VM </JVM_name>
+  </software>
+  <hardware>
+    <MAC> 02-50-41-00-00-01 </MAC>
+    <IP_local> 134.48.232.116 </IP_local>
+    <IP_external> &lt;html&gt; </IP_external>
+  </hardware>
+  <comments> - </comments>
+</geometry_complex>
