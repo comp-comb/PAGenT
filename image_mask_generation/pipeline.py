@@ -5,394 +5,209 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
-from matplotlib.patches import Ellipse
 from PIL import Image
 
-# Function to parse the xml files and save the data to a csv file
+# -----------------------------------------------------------------------------
+# 1) XML → CSV
+# -----------------------------------------------------------------------------
 def parse_data_to_CSV(xml_dir, file_begins_with, file_ends_with, output_csv):
+    xml_files = sorted([
+        f for f in os.listdir(xml_dir)
+        if f.startswith(file_begins_with) and f.endswith(file_ends_with)
+    ])
+    rows = []
+    for cid, fname in enumerate(xml_files):
+        tree = ET.parse(os.path.join(xml_dir, fname))
+        dp = tree.getroot().find('.//data_particle')
+        if dp is None:
+            continue
+        for part in dp.findall('particle'):
+            pid = part.get('ID')
+            r = float(part.find('radius').text)
+            x, y, z = map(float, part.find('position').text.split(','))
+            rows.append([cid, pid, r, x, y, z])
+    df = pd.DataFrame(rows, columns=['Cluster','Particle','Radius','x','y','z'])
+    df.to_csv(output_csv, index=False)
+    return df
 
-    # get all xml files in the directory
-    xml_files = []
-    for file in os.listdir(xml_dir):
-        if file.endswith(file_ends_with) and file.startswith(file_begins_with):
-            xml_files.append(file)
+# -----------------------------------------------------------------------------
+# 2) Mask generation (black background + white circle, exact 1024×1024)
+# -----------------------------------------------------------------------------
+def plot_particle_mask(cluster_df, cluster_id, mask_dir):
+    w, h, dpi = 1024, 1024, 96
+    out = os.path.join(mask_dir, 'particle')
+    os.makedirs(out, exist_ok=True)
 
-    #DF for the final file
-    data = pd.DataFrame(columns = ['Cluster', 'Particle', 'Radius', 'x', 'y', 'z'])
+    for idx, row in enumerate(cluster_df.itertuples(), start=1):
+        fig, ax = plt.subplots(figsize=(w/dpi, h/dpi), dpi=dpi)
+        fig.patch.set_facecolor('black')
+        ax.set_facecolor('black')
+        circ = Circle((row.x, row.y), row.Radius, color='white', fill=True)
+        ax.add_patch(circ)
+        ax.set_xlim(-w/2, w/2)
+        ax.set_ylim(-h/2, h/2)
+        ax.set_aspect('equal')
+        ax.axis('off')
+        fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
-    # Initialize lists to store data
-    particle_id, radius, x, y, z = [], [], [], [], []
-    cluster_id = []
-    counter=0
+        fn = os.path.join(out, f'mask_{cluster_id:06d}_{idx:06d}.png')
+        fig.savefig(fn, dpi=dpi, bbox_inches=None, pad_inches=0,
+                    facecolor=fig.get_facecolor())
+        plt.close(fig)
 
-    # loop through all xml files
-    for file in xml_files:
-        # parse the xml file
-        tree = ET.parse(xml_dir + file)
-        root = tree.getroot()
-        # Extract particle data
-        data_particle = root.find(".//data_particle")
-        for particle in data_particle.findall('particle'):
-            part_id = particle.get('ID')
-            part_radius = float(particle.find('radius').text.strip())
-            position = [float(p.strip()) for p in particle.find('position').text.strip().split(',')]
-            # Append data to lists
-            particle_id.append(part_id)
-            radius.append(part_radius)
-            x.append(position[0])
-            y.append(position[1])
-            z.append(position[2])
-            cluster_id.append(counter)
-        counter+=1
+def plot_clusters_mask(cluster_df, cluster_id, mask_dir):
+    w, h, dpi = 1024, 1024, 96
+    out = os.path.join(mask_dir, 'cluster')
+    os.makedirs(out, exist_ok=True)
 
-    # Add data to the dataframe
-    data['Cluster'] = cluster_id
-    data['Particle'] = particle_id
-    data['Radius'] = radius
-    data['x'] = x
-    data['y'] = y
-    data['z'] = z
+    fig, ax = plt.subplots(figsize=(w/dpi, h/dpi), dpi=dpi)
+    fig.patch.set_facecolor('black')
+    ax.set_facecolor('black')
+    for row in cluster_df.itertuples():
+        circ = Circle((row.x, row.y), row.Radius, color='white', fill=True)
+        ax.add_patch(circ)
+    ax.set_xlim(-w/2, w/2)
+    ax.set_ylim(-h/2, h/2)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
-    # Save the dataframe to a csv file
-    data.to_csv(output_csv, index=False)
+    fn = os.path.join(out, f'mask_{cluster_id:06d}.png')
+    fig.savefig(fn, dpi=dpi, bbox_inches=None, pad_inches=0,
+                facecolor=fig.get_facecolor())
+    plt.close(fig)
 
-    return data
-
-########################################################################################
-
-# Function to plot the individual particles in a cluster and save them as a 1-bit image
-def plot_particle_mask(cluster_df, clusters):
-    # setting the plot size 
-    w = 1024
-    h = 1024
-    # setting the dpi of the figure
-    dpi = 96
-    # setting the figure properties
-    plt.rcParams["figure.figsize"] = [w/dpi, h/dpi]
-    plt.rcParams["figure.dpi"] = dpi
-    plt.rcParams['savefig.facecolor'] = 'black'
-    plt.rcParams['savefig.dpi'] = dpi
-    plt.rcParams['figure.facecolor'] = 'black'
-   
-    #list to store mask data
-    particle_datadf = []
-    # The count variable keeps track of the rank of particles in a cluster
-    count = 1
-    for index, row in cluster_df.iterrows():
-        fig, ax = plt.subplots()
-        fig.set_size_inches(w/dpi, h/dpi)
-        x = row['x']
-        y = row['y']
-        radius = row['Radius']
-        ax.set_facecolor("black")
-        circle = plt.Circle((x, y), radius, fill=True, color='w')
-        ax.add_artist(circle)
-        ax.set_aspect(1)
-        ax.set_xlim([-w/2, w/2])
-        ax.set_ylim([-h/2, h/2])
-        border = plt.Rectangle((-w/2, -h/2), w, h, fill=False, edgecolor='r', linewidth=2)
-        ax.add_patch(border)
-        plt.axis('off')
-        #plt.tight_layout()
-        # saving the figure
-        output = mask_dir
-        if not os.path.exists(output):
-            os.makedirs(output)
-        # Create additional directories if not present
-        if not os.path.exists(f'{output}/particle'):
-            os.makedirs(f'{output}/particle')
-        filename = f'{output}/particle/mask_{str(clusters).zfill(6)}_{str(count).zfill(6)}.png'
-        plt.savefig(filename, bbox_inches=None, pad_inches=0)
-        plt.close()   # close the figure window 
-        
-        #img = Image.open(filename).convert('1')
-        #img.save(filename)
-
-        particle_datadf.append([x,y,radius,count])
-
-        count += 1
-    
-    particle_datadf = pd.DataFrame(particle_datadf, columns = ["x","y","radius","count"])
-    return particle_datadf
-
-
-
-def plot_part_mask2(cluster_df,clusters):
-    # setting the plot size 
-    
-    count=0
-  
-    output = mask_dir
-    if not os.path.exists(output):
-        os.makedirs(output)
-    if not os.path.exists(f'{output}/particle'):
-        os.makedirs(f'{output}/particle')
-
-    for index, row in cluster_df.iterrows():
-        w=1024
-        h=1024
-        # setting the dpi of the figure
-        dpi=96
-        # setting the figure properties
-        plt.rcParams["figure.figsize"] = [w/dpi, h/dpi]
-        plt.rcParams["figure.dpi"] = dpi
-        plt.rcParams['savefig.facecolor'] = 'black'
-        plt.rcParams['savefig.dpi'] = dpi
-        plt.rcParams['figure.facecolor'] = 'black'
-        
-        fig, ax = plt.subplots()
-        fig.set_size_inches(w/dpi,h/dpi)
-        ax.set_facecolor("black")
-
-        x = row['x']
-        y = row['y']
-        radius = row['Radius']
-        
-        circle = plt.Circle((x, y), radius, fill=True, color='w')
-        ax.add_artist(circle)
-        # ax.set_aspect('equal', adjustable='box')
-        ax.set_aspect(1)
-        ax.set_xlim([-1024/2, 1024/2])
-        ax.set_ylim([-1024/2, 1024/2])
-        plt.axis('off')
-
-        filename = f'{output}/particle/mask_{str(clusters).zfill(6)}_{count:06d}.png'
-        plt.savefig(filename, bbox_inches=None, pad_inches=0)
-        img = Image.open(filename).convert('1')
-        img.save(filename)
-        plt.close()  
-
-        count += 1
-    
-    #plt.tight_layout()
-    print(f"PART_MASK: total particle masks: {count}")
- 
-   
-
-    
-    
-    # close the figure window 
-
-
-#############################################################################################
-
-# Function to plot the individual particles in a cluster and save them as a 1-bit image
-def plot_clusters_mask(cluster_df,clusters):
-    # setting the plot size 
-    w=1024
-    h=1024
-    # setting the dpi of the figure
-    dpi=96
-    # setting the figure properties
-    plt.rcParams["figure.figsize"] = [w/dpi, h/dpi]
-    plt.rcParams["figure.dpi"] = dpi
-    plt.rcParams['savefig.facecolor'] = 'black'
-    plt.rcParams['savefig.dpi'] = dpi
-    plt.rcParams['figure.facecolor'] = 'black'
-   
-    fig, ax = plt.subplots()
-    fig.set_size_inches(w/dpi,h/dpi)
-    ax.set_facecolor("black")
-    count =0
-    for index, row in cluster_df.iterrows():
-        
-        x = row['x']
-        y = row['y']
-        radius = row['Radius']
-        
-        circle = plt.Circle((x, y), radius, fill=True, color='w')
-        ax.add_artist(circle)
-        # ax.set_aspect('equal', adjustable='box')
-
-        count +=1
-       
-    ax.set_aspect(1)
-    ax.set_xlim([-w/2, w/2])
-    ax.set_ylim([-h/2, h/2])
-    #plt.tight_layout()
-    plt.axis('off')
- 
-    output = mask_dir
-    if not os.path.exists(output):
-        os.makedirs(output)
-    # Create additional directories if not present
-    if not os.path.exists(f'{output}/cluster'):
-        os.makedirs(f'{output}/cluster')
-
-    filename = f'{output}/cluster/mask_{str(clusters).zfill(6)}.png'
-    plt.savefig(filename, bbox_inches=0, pad_inches=0)
-    img = Image.open(filename).convert('1')
-    img.save(filename)
-    plt.close()   # close the figure window 
-    print(f"Cluster_mask: total particles: {count}")
-
-    
-
-
-###################################################################################
-#Functions ot add noise to images
-
+# -----------------------------------------------------------------------------
+# 3) Noise & TEM background
+# -----------------------------------------------------------------------------
 def add_gauss_noise(image, gaussian_std=0.09):
-    gauss_noise = np.random.normal(scale=gaussian_std, size=image.shape)
-    noisy_image = image + gauss_noise
-    noisy_image = np.clip(noisy_image,0,1)
-    return noisy_image
-def add_poisson_noise(image, intensity = 2):
-    poisson_noise = np.random.poisson(image / intensity) * intensity
-    noisy_image = np.clip(image+poisson_noise,0,1)
-    return noisy_image
-def add_combined_noise(image, poisson_intensity = 2, gaussian_std=0.09):
-    poisson_noise = np.random.poisson(image / poisson_intensity) * poisson_intensity
-    poisson_image = np.clip(image+poisson_noise,0,1)   
+    noise = np.random.normal(scale=gaussian_std, size=image.shape)
+    return np.clip(image + noise, 0, 1)
 
-    gauss_noise = np.random.normal(scale=gaussian_std, size=image.shape) 
-    noisy_image = np.clip(poisson_image+gauss_noise,0,1)
-    return noisy_image
+def add_poisson_noise(image, intensity=2):
+    pn = np.random.poisson(image / intensity) * intensity
+    return np.clip(image + pn, 0, 1)
 
-######################################################################################
+def add_combined_noise(image, poisson_intensity=2, gaussian_std=0.09):
+    tmp = add_poisson_noise(image, intensity=poisson_intensity)
+    return add_gauss_noise(tmp, gaussian_std=gaussian_std)
 
-#plot full clusters and add noise
+def generate_hrtem_noise_image(width=1024, height=1024, mean=128, std=15):
+    rnd = np.random.normal(loc=mean, scale=std, size=(height, width))
+    return np.clip(rnd, 0, 255).astype(np.uint8)
 
-def plot_clusters(cluster_df,clusters, noisetype):
-    #plot size
-    w = 1024
-    h = 1024
-    #figure dpi
-    dpi= 96
+# -----------------------------------------------------------------------------
+# 4) Cluster rendering + multiple noises + optional TEM background + custom color
+# -----------------------------------------------------------------------------
+def plot_clusters(cluster_df, cluster_id,
+                  image_dir, noisyoutput_dir,
+                  noise_types=['gauss'],
+                  tem_style=False, tem_mean=128, tem_std=15,
+                  tem_color=(0.045,0.045,0.045,0.3)):
+    w, h, dpi = 1024, 1024, 96
 
-    plt.rcParams["figure.figsize"] = [w/dpi, h/dpi]
-    plt.rcParams["figure.dpi"] = dpi
-    plt.rcParams['savefig.dpi'] = dpi
-    plt.rcParams['figure.facecolor'] = '#A4A4A4' #paddle: 7E7E7E  sipkemtem: #A4A4A4
-    #plt.rcParams['savefig.facecolor'] = '#B6B6B6'
-    fig, ax = plt.subplots()
-    fig.set_size_inches(w/dpi,h/dpi)
-    temcolor = (.045,.045,.045,0.3)
-    count =0 
-    #list to store particle data
-    cluster_data = []
-    for index, row in cluster_df.iterrows():
-        x = row['x']
-        y = row['y']
-        radius = row['Radius']
-        circle = plt.Circle((x,y),radius, fill=True, color=temcolor,linewidth=0, antialiased=True)
-        ax.add_artist(circle)
-        #ellipse = Ellipse((x,y), width = radius* np.random.uniform(1,4), height = radius*np.random.uniform(1,4), fill=True, color=temcolor,linewidth=0, antialiased=False)
-        #ax.add_artist(ellipse)
-        ax.set_aspect(1)
-        ax.set_xlim([-1024/2,1024/2])
-        ax.set_ylim([-1024/2,1024/2])
-        cluster_data.append([x,y,radius])
-        count+=1
-    #ax.set_aspect(1)
-    #ax.set_xlim([-w/2,w/2])
-    #ax.set_ylim([-h/2,h/2])
-    #border = plt.Rectangle((-w/2, -h/2), w, h, fill=False, edgecolor='r', linewidth=2)
-    #ax.add_patch(border)
+    # Draw base: optional TEM‐style background
+    fig, ax = plt.subplots(figsize=(w/dpi, h/dpi), dpi=dpi)
+    if tem_style:
+        bg = generate_hrtem_noise_image(width=w, height=h,
+                                        mean=tem_mean, std=tem_std)
+        ax.imshow(bg, cmap='gray', origin='lower',
+                  extent=[-w/2, w/2, -h/2, h/2],
+                  interpolation='nearest', aspect='auto')
 
-    plt.axis('off')
-    #plt.tight_layout()
-    #plt.show()
+    # Draw semi‐transparent circles using provided color
+    for row in cluster_df.itertuples():
+        circ = Circle((row.x, row.y), row.Radius,
+                      color=tem_color, fill=True, linewidth=0)
+        ax.add_patch(circ)
 
-    output = image_dir
-    if not os.path.exists(output):
-        os.makedirs(output)
+    ax.set_xlim(-w/2, w/2)
+    ax.set_ylim(-h/2, h/2)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
-    noisyoutput = noisyoutput_dir
-    if not os.path.exists(noisyoutput):
-        os.makedirs(noisyoutput)
+    os.makedirs(image_dir, exist_ok=True)
+    os.makedirs(noisyoutput_dir, exist_ok=True)
 
-    filename = f'{output}/image_{str(clusters).zfill(6)}.png'
-    plt.savefig(filename,bbox_inches=None,pad_inches=0)
-    image = plt.imread(filename)
-    if noisetype == 1:
-        noisy_image = add_gauss_noise(image)
-    if noisetype == 2:
-        noisy_image = add_poisson_noise(image)
-    if noisetype == 3:
-        noisy_image = add_combined_noise(image)
+    # Save the base (TEM + circles)
+    base_fn = os.path.join(image_dir, f'image_{cluster_id:06d}.png')
+    fig.savefig(base_fn, dpi=dpi, bbox_inches=None, pad_inches=0)
+    plt.close(fig)
 
-  
-    noisy_filename = f'{noisyoutput}image_{str(clusters).zfill(6)}.png'
-    plt.imsave(noisy_filename, noisy_image)
-    #plt.show()
-    
-    cluster_datadf = pd.DataFrame(cluster_data, columns=["x","y","radius"])
-   
-    plt.close()   # close the figure window
+    base_img = plt.imread(base_fn)
+    # Apply each noise in the list
+    for nt in noise_types:
+        if nt == 'gauss':
+            out = add_gauss_noise(base_img)
+        elif nt == 'poisson':
+            out = add_poisson_noise(base_img)
+        elif nt == 'combined':
+            out = add_combined_noise(base_img)
+        elif nt == 'tem':
+            # re‐overlay TEM background over circles
+            bg = generate_hrtem_noise_image(width=w, height=h,
+                                            mean=tem_mean, std=tem_std) / 255.0
+            bg_rgb = np.dstack([bg]*3)
+            mask = base_img[...,0] > 0
+            out = bg_rgb.copy()
+            out[mask] = 1.0
+        else:
+            raise ValueError(f"Unknown noise type '{nt}'")
 
-    print(f"Cluster_render: total particle count: {count}")
-    return cluster_datadf
+        noisy_fn = os.path.join(noisyoutput_dir,
+                                f'image_{cluster_id:06d}_{nt}.png')
+        plt.imsave(noisy_fn, out)
+        print(f"Rendered cluster {cluster_id:06d} with {nt}")
 
+# -----------------------------------------------------------------------------
+# 5) Main pipeline
+# -----------------------------------------------------------------------------
+def main(xml_dir, file_begins_with, file_ends_with,
+         output_csv, mask_dir, image_dir, noisyoutput_dir,
+         mask_type='both',
+         noise_types=['gauss'],
+         tem_style=False, tem_mean=128, tem_std=15,
+         tem_color=(0.045,0.045,0.045,0.3)):
 
-######################################################################################
+    df = parse_data_to_CSV(xml_dir, file_begins_with, file_ends_with, output_csv)
 
-#run though all
+    for cid in df['Cluster'].unique():
+        sub = df[df['Cluster'] == cid]
+        if sub.empty:
+            continue
 
-def main(xml_dir, file_begins_with, file_ends_with, output_csv, mask_dir, 
-         image_dir, noisyoutput_dir, noisetype, mask_type):
-    data = parse_data_to_CSV(xml_dir, file_begins_with, file_ends_with, output_csv)
+        # Generate masks
+        if mask_type in ('particle','both'):
+            plot_particle_mask(sub, cid, mask_dir)
+        if mask_type in ('cluster','both'):
+            plot_clusters_mask(sub, cid, mask_dir)
 
-    #can also be started directly from csv
-    #data= pd.read_csv(output_csv, index_col=False)
-
-    particle_dataframes = []
-    cluster_dataframes = []
-
-    if mask_type == 'particle' or mask_type == 'both':
-    #looping through clusters and calling plot particle mask function
-        for clusters in data['Cluster'].unique():
-            cluster_df = data[data['Cluster'] == clusters]
-            plot_part_mask2(cluster_df, clusters)
-            #particle_df= plot_particle_mask(cluster_df, clusters)
-            #if not particle_df.empty:
-                #particle_dataframes.append(particle_df)
-
-    if mask_type == 'cluster' or mask_type == 'both':
-        for clusters in data['Cluster'].unique():
-            cluster_df = data[data['Cluster'] == clusters]
-            plot_clusters_mask(cluster_df, clusters)
-
-    for clusters in data['Cluster'].unique():
-        cluster_df = data[data['Cluster'] == clusters]
+        # Render TEM & noise
         plt.rcdefaults()
-        plot_clusters(cluster_df, clusters, noisetype)
-        #cluster_datadf = plot_clusters(cluster_df, clusters, noisetype)
-        if not cluster_df.empty:
-            plot_clusters(cluster_df, clusters, noisetype)
-            #cluster_dataframes.append(cluster_datadf)
+        plot_clusters(sub, cid,
+                      image_dir, noisyoutput_dir,
+                      noise_types,
+                      tem_style, tem_mean, tem_std,
+                      tem_color)
 
-    # Combine dataframes
-    #if particle_dataframes:
-    #    particle_datadf = pd.concat(particle_dataframes, ignore_index=True)
-    #else:
-    #    particle_datadf = pd.DataFrame(columns=["x", "y", "radius", "count"])
-
-    #if cluster_dataframes:
-    #    cluster_datadf = pd.concat(cluster_dataframes, ignore_index=True)
-    #else:
-    #    cluster_datadf = pd.DataFrame(columns=["x", "y", "radius"])
-
-   
-
-    #return cluster_datadf, particle_datadf  # Returning for further use
-
-
-if __name__ == "__main__":
-    # Example usage
-    # Define your parameters here
-    ROOT = './'
-    xml_dir = os.path.join(ROOT, 'xmls/')
-    file_begins_with = 'geometry'
-    file_ends_with = '.xml'
-    output_csv = os.path.join(ROOT,'data.csv')
-    mask_dir = os.path.join(ROOT, 'masks/')
-    image_dir = os.path.join(ROOT, 'images/')
-    noisyoutput_dir = os.path.join(ROOT,'noisyoutput/')
-    noisetype = 1 #1 for gaussian, 2 for poisson, 3 for combined
-
-    main(xml_dir, file_begins_with, file_ends_with, output_csv, 
-         mask_dir, image_dir, noisyoutput_dir, noisetype, mask_type='both')
-
+# -----------------------------------------------------------------------------
+# 6) Script entrypoint
+# -----------------------------------------------------------------------------
+if __name__ == '__main__':
+    main(
+        xml_dir='./xmls/',
+        file_begins_with='geometry',
+        file_ends_with='.xml',
+        output_csv='./data.csv',
+        mask_dir='./masks/',
+        image_dir='./images/',
+        noisyoutput_dir='./noisyoutput/',
+        mask_type='both',
+        noise_types=['gauss','poisson','tem'],
+        tem_style=True,
+        tem_mean=180,
+        tem_std=25,
+        tem_color=(0.045,0.045,0.045,0.3)
+    )

@@ -1,171 +1,251 @@
-import tkinter as tk
-from tkinter import filedialog, scrolledtext
+import sys
 import os
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QLabel, QLineEdit,
+    QPushButton, QComboBox, QCheckBox, QTextEdit,
+    QVBoxLayout, QHBoxLayout, QFileDialog, QSpinBox, QColorDialog
+)
+from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtCore import QObject, pyqtSignal, QThread
 
-# Import the processing functions
-from pipeline import main  # assumes your XML/CSV processing code is in processing.py
+import pipeline
 
-class App(tk.Tk):
+class PipelineWorker(QObject):
+    output = pyqtSignal(str)
+    finished = pyqtSignal()
+
+    def __init__(self, xml_dir, prefix, suffix,
+                 output_csv, mask_dir, image_dir, noisyoutput_dir,
+                 mask_type, noise_types, tem_style, tem_mean, tem_std, tem_color):
+        super().__init__()
+        self.params = {
+            'xml_dir': xml_dir,
+            'file_begins_with': prefix,
+            'file_ends_with': suffix,
+            'output_csv': output_csv,
+            'mask_dir': mask_dir,
+            'image_dir': image_dir,
+            'noisyoutput_dir': noisyoutput_dir,
+            'mask_type': mask_type,
+            'noise_types': noise_types,
+            'tem_style': tem_style,
+            'tem_mean': tem_mean,
+            'tem_std': tem_std,
+            'tem_color': tem_color
+        }
+
+    def run(self):
+        orig_stdout, orig_stderr = sys.stdout, sys.stderr
+        sys.stdout, sys.stderr = self, self
+        try:
+            pipeline.main(**self.params)
+        except Exception as e:
+            print(f"Error: {e}")
+        finally:
+            sys.stdout, sys.stderr = orig_stdout, orig_stderr
+            self.finished.emit()
+
+    def write(self, text):
+        if text.strip():
+            self.output.emit(text)
+
+    def flush(self):
+        pass
+
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.title("Cluster Mask and Noise Generator")
-        self.geometry("700x600")
+        self.setWindowTitle("Cluster Mask & Noise GUI")
+        self.status = self.statusBar()
+        # default TEM color
+        r, g, b, a = [int(0.045*255)]*3 + [int(0.3*255)]
+        self.tem_color = QColor(r, g, b, a)
+        self.initUI()
 
-        # store widgets for theming
-        self.widgets = []
-        self.current_theme = 'Light'
+    def initUI(self):
+        layout = QVBoxLayout()
 
-        self._build_ui()
-        self.apply_theme()
-
-    def _build_ui(self):
-        pad = {'padx': 5, 'pady': 5}
         # Working Directory
-        lbl_root = tk.Label(self, text="Working Directory:")
-        lbl_root.grid(row=0, column=0, sticky="e", **pad)
-        self.widgets.append(lbl_root)
-        self.rootEntry = tk.Entry(self, width=50)
-        self.rootEntry.insert(0, os.getcwd())
-        self.rootEntry.grid(row=0, column=1, **pad)
-        self.widgets.append(self.rootEntry)
-        btn_root = tk.Button(self, text="Browse...", command=self.browse_root)
-        btn_root.grid(row=0, column=2, **pad)
-        self.widgets.append(btn_root)
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Working Directory:"))
+        self.rootLineEdit = QLineEdit(os.getcwd())
+        row.addWidget(self.rootLineEdit)
+        btn = QPushButton("Browse...")
+        btn.clicked.connect(self.browse_root)
+        row.addWidget(btn)
+        layout.addLayout(row)
 
         # XML Folder
-        lbl_xml = tk.Label(self, text="XML Folder:")
-        lbl_xml.grid(row=1, column=0, sticky="e", **pad)
-        self.widgets.append(lbl_xml)
-        self.xmlEntry = tk.Entry(self, width=50)
-        self.xmlEntry.grid(row=1, column=1, **pad)
-        self.widgets.append(self.xmlEntry)
-        btn_xml = tk.Button(self, text="Browse...", command=self.browse_xml)
-        btn_xml.grid(row=1, column=2, **pad)
-        self.widgets.append(btn_xml)
+        row = QHBoxLayout()
+        row.addWidget(QLabel("XML Folder:"))
+        default_xml = os.path.join(self.rootLineEdit.text(), 'xmls') + os.sep
+        self.xmlLineEdit = QLineEdit(default_xml)
+        row.addWidget(self.xmlLineEdit)
+        btn = QPushButton("Browse...")
+        btn.clicked.connect(self.browse_xml)
+        row.addWidget(btn)
+        layout.addLayout(row)
 
         # File prefix/suffix
-        lbl_begin = tk.Label(self, text="File begins with:")
-        lbl_begin.grid(row=2, column=0, sticky="e", **pad)
-        self.widgets.append(lbl_begin)
-        self.beginEntry = tk.Entry(self)
-        self.beginEntry.insert(0, "geometry")
-        self.beginEntry.grid(row=2, column=1, sticky="w", **pad)
-        self.widgets.append(self.beginEntry)
+        row = QHBoxLayout()
+        row.addWidget(QLabel("File begins with:"))
+        self.beginLineEdit = QLineEdit("geometry")
+        row.addWidget(self.beginLineEdit)
+        row.addWidget(QLabel("File ends with:"))
+        self.endLineEdit = QLineEdit(".xml")
+        row.addWidget(self.endLineEdit)
+        layout.addLayout(row)
 
-        lbl_end = tk.Label(self, text="File ends with:")
-        lbl_end.grid(row=3, column=0, sticky="e", **pad)
-        self.widgets.append(lbl_end)
-        self.endEntry = tk.Entry(self)
-        self.endEntry.insert(0, ".xml")
-        self.endEntry.grid(row=3, column=1, sticky="w", **pad)
-        self.widgets.append(self.endEntry)
+        # Mask Type
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Mask Type:"))
+        self.particleCheck = QCheckBox("Particle")
+        self.clusterCheck = QCheckBox("Cluster")
+        self.particleCheck.setChecked(True)
+        self.clusterCheck.setChecked(True)
+        row.addWidget(self.particleCheck)
+        row.addWidget(self.clusterCheck)
+        layout.addLayout(row)
 
-        # Noise type
-        lbl_noise = tk.Label(self, text="Noise Type:")
-        lbl_noise.grid(row=4, column=0, sticky="e", **pad)
-        self.widgets.append(lbl_noise)
-        self.noiseVar = tk.StringVar(value="Gaussian (1)")
-        noiseOptions = ["Gaussian (1)", "Poisson (2)", "Combined (3)"]
-        self.noiseMenu = tk.OptionMenu(self, self.noiseVar, *noiseOptions)
-        self.noiseMenu.grid(row=4, column=1, sticky="w", **pad)
-        self.widgets.append(self.noiseMenu)
+        # Noise Types
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Noise Types:"))
+        self.gauss_cb = QCheckBox("Gaussian")
+        self.gauss_cb.setChecked(True)
+        row.addWidget(self.gauss_cb)
+        self.poisson_cb = QCheckBox("Poisson")
+        row.addWidget(self.poisson_cb)
+        self.tem_cb = QCheckBox("TEM-like")
+        row.addWidget(self.tem_cb)
+        layout.addLayout(row)
 
-        # Mask types
-        lbl_mask = tk.Label(self, text="Mask Type:")
-        lbl_mask.grid(row=5, column=0, sticky="e", **pad)
-        self.widgets.append(lbl_mask)
-        self.particleVar = tk.BooleanVar(value=True)
-        chk_part = tk.Checkbutton(self, text="Particle Mask", variable=self.particleVar)
-        chk_part.grid(row=5, column=1, sticky="w", **pad)
-        self.widgets.append(chk_part)
-        self.clusterVar = tk.BooleanVar(value=True)
-        chk_clust = tk.Checkbutton(self, text="Cluster Mask", variable=self.clusterVar)
-        chk_clust.grid(row=5, column=2, sticky="w", **pad)
-        self.widgets.append(chk_clust)
+        # TEM params
+        row = QHBoxLayout()
+        row.addWidget(QLabel("TEM Mean:"))
+        self.temMeanSpin = QSpinBox(); self.temMeanSpin.setRange(0,255); self.temMeanSpin.setValue(180); self.temMeanSpin.setEnabled(False)
+        row.addWidget(self.temMeanSpin)
+        row.addWidget(QLabel("TEM Std:"))
+        self.temStdSpin = QSpinBox(); self.temStdSpin.setRange(0,100); self.temStdSpin.setValue(25); self.temStdSpin.setEnabled(False)
+        row.addWidget(self.temStdSpin)
+        layout.addLayout(row)
+        self.tem_cb.toggled.connect(self.temMeanSpin.setEnabled)
+        self.tem_cb.toggled.connect(self.temStdSpin.setEnabled)
+
+        # TEM color
+        row = QHBoxLayout()
+        row.addWidget(QLabel("TEM Color:"))
+        self.temColorBtn = QPushButton(self.tem_color.name(QColor.HexArgb))
+        self.temColorBtn.clicked.connect(self.choose_color)
+        row.addWidget(self.temColorBtn)
+        layout.addLayout(row)
 
         # Theme selector
-        lbl_theme = tk.Label(self, text="Theme:")
-        lbl_theme.grid(row=6, column=0, sticky="e", **pad)
-        self.widgets.append(lbl_theme)
-        self.themeVar = tk.StringVar(value="Light")
-        self.themeMenu = tk.OptionMenu(self, self.themeVar, "Light", "Dark", command=self.change_theme)
-        self.themeMenu.grid(row=6, column=1, sticky="w", **pad)
-        self.widgets.append(self.themeMenu)
+        theme_row = QHBoxLayout()
+        theme_row.addWidget(QLabel("Theme:"))
+        self.themeCombo = QComboBox()
+        self.themeCombo.addItems(["Light", "Dark"])
+        self.themeCombo.currentTextChanged.connect(self.on_theme_change)
+        theme_row.addWidget(self.themeCombo)
+        layout.addLayout(theme_row)
 
-        # Run button
-        btn_run = tk.Button(self, text="Run", command=self.run_processing)
-        btn_run.grid(row=7, column=1, **pad)
-        self.widgets.append(btn_run)
+        # Run + Log
+        self.runButton = QPushButton("Run")
+        self.runButton.clicked.connect(self.start)
+        layout.addWidget(self.runButton)
+        self.logText = QTextEdit(readOnly=True)
+        layout.addWidget(self.logText)
 
-        # Log output
-        self.logText = scrolledtext.ScrolledText(self, width=80, height=15, state='disabled')
-        self.logText.grid(row=8, column=0, columnspan=3, padx=5, pady=5)
-        self.widgets.append(self.logText)
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+        QApplication.setStyle('Fusion')
+        self.apply_light_theme()
+
+    def on_theme_change(self, theme):
+        if theme == "Dark":
+            self.apply_dark_theme()
+        else:
+            self.apply_light_theme()
+
+    def choose_color(self):
+        dlg = QColorDialog(self.tem_color, self)
+        dlg.setOption(QColorDialog.ShowAlphaChannel, True)
+        if dlg.exec_() == QColorDialog.Accepted:
+            c = dlg.selectedColor()
+            if c.isValid():
+                self.tem_color = c
+                self.temColorBtn.setText(c.name(QColor.HexArgb))
 
     def browse_root(self):
-        d = filedialog.askdirectory(initialdir=os.getcwd(), title="Select Root Directory")
+        d = QFileDialog.getExistingDirectory(self, "Select Working Dir", os.getcwd())
         if d:
-            self.rootEntry.delete(0, tk.END)
-            self.rootEntry.insert(0, d)
+            self.rootLineEdit.setText(d)
+            self.xmlLineEdit.setText(os.path.join(d,'xmls')+os.sep)
 
     def browse_xml(self):
-        d = filedialog.askdirectory(initialdir=os.getcwd(), title="Select XML Directory")
-        if d:
-            self.xmlEntry.delete(0, tk.END)
-            self.xmlEntry.insert(0, d)
+        d = QFileDialog.getExistingDirectory(self, "Select XML Dir", os.getcwd())
+        if d and not d.endswith(os.sep): d += os.sep
+        self.xmlLineEdit.setText(d)
 
-    def change_theme(self, *_):
-        self.current_theme = self.themeVar.get()
-        self.apply_theme()
+    def start(self):
+        self.runButton.setEnabled(False)
+        self.logText.clear(); self.status.showMessage("Pipeline started...")
+        ROOT = self.rootLineEdit.text()
+        xml = self.xmlLineEdit.text()
+        prefix = self.beginLineEdit.text()
+        suffix = self.endLineEdit.text()
+        outCSV = os.path.join(ROOT,'data.csv')
+        maskDir = os.path.join(ROOT,'masks')+os.sep
+        imgDir = os.path.join(ROOT,'images')+os.sep
+        noisyDir = os.path.join(ROOT,'noisyoutput')+os.sep
+        mtypes = []
+        if self.particleCheck.isChecked(): mtypes.append('particle')
+        if self.clusterCheck.isChecked(): mtypes.append('cluster')
+        maskType = 'both' if len(mtypes)==2 else (mtypes[0] if mtypes else '')
+        nTypes = []
+        if self.gauss_cb.isChecked(): nTypes.append('gauss')
+        if self.poisson_cb.isChecked(): nTypes.append('poisson')
+        if self.tem_cb.isChecked(): nTypes.append('tem')
+        temStyle = self.tem_cb.isChecked()
+        temMean = self.temMeanSpin.value()
+        temStd  = self.temStdSpin.value()
+        c = self.tem_color
+        temColor = (c.red()/255.0, c.green()/255.0, c.blue()/255.0, c.alpha()/255.0)
 
-    def apply_theme(self):
-        if self.current_theme == 'Dark':
-            bg = '#353535'
-            fg = 'white'
-        else:
-            bg = 'white'
-            fg = 'black'
-        self.configure(bg=bg)
-        for w in self.widgets:
-            try:
-                w.configure(bg=bg, fg=fg)
-            except:
-                try:
-                    w.configure(bg=bg)
-                except:
-                    pass
+        self.worker = PipelineWorker(
+            xml, prefix, suffix,
+            outCSV, maskDir, imgDir, noisyDir,
+            maskType, nTypes,
+            temStyle, temMean, temStd, temColor
+        )
+        self.thread = QThread()
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.output.connect(self.logText.append)
+        self.worker.finished.connect(self.on_finished)
+        self.thread.start()
 
-    def log(self, msg):
-        self.logText.configure(state='normal')
-        self.logText.insert(tk.END, msg + "\n")
-        self.logText.see(tk.END)
-        self.logText.configure(state='disabled')
+    def on_finished(self):
+        self.status.showMessage("Pipeline completed successfully.")
+        self.runButton.setEnabled(True)
+        self.thread.quit()
+        self.thread.wait()
 
-    def run_processing(self):
-        ROOT = self.rootEntry.get()
-        xml_dir = self.xmlEntry.get()
-        file_begins_with = self.beginEntry.get()
-        file_ends_with = self.endEntry.get()
-        noise_map = {"Gaussian (1)": 1, "Poisson (2)": 2, "Combined (3)": 3}
-        noisetype = noise_map.get(self.noiseVar.get(), 1)
-        mask_list = []
-        if self.particleVar.get(): mask_list.append('particle')
-        if self.clusterVar.get(): mask_list.append('cluster')
-        mask_type = 'both' if len(mask_list) == 2 else (mask_list[0] if mask_list else '')
-        output_csv = os.path.join(ROOT, 'data.csv')
-        mask_dir = os.path.join(ROOT, 'masks')
-        image_dir = os.path.join(ROOT, 'images')
-        noisyoutput_dir = os.path.join(ROOT, 'noisyoutput')
+    def apply_dark_theme(self):
+        p = QPalette()
+        p.setColor(QPalette.Window, QColor(53,53,53)); p.setColor(QPalette.WindowText, QColor(255,255,255))
+        p.setColor(QPalette.Base, QColor(35,35,35)); p.setColor(QPalette.AlternateBase, QColor(53,53,53))
+        p.setColor(QPalette.ToolTipBase, QColor(255,255,220)); p.setColor(QPalette.ToolTipText, QColor(255,255,255))
+        p.setColor(QPalette.Text, QColor(255,255,255)); p.setColor(QPalette.Button, QColor(53,53,53))
+        p.setColor(QPalette.ButtonText, QColor(255,255,255)); p.setColor(QPalette.Highlight, QColor(42,130,218))
+        p.setColor(QPalette.HighlightedText, QColor(0,0,0))
+        QApplication.setPalette(p)
 
-        self.log("Starting processing...")
-        try:
-            main(xml_dir, file_begins_with, file_ends_with,
-                 output_csv, mask_dir, image_dir, noisyoutput_dir,
-                 noisetype, mask_type)
-            self.log("Processing completed successfully.")
-        except Exception as e:
-            self.log(f"Error: {e}")
+    def apply_light_theme(self):
+        QApplication.setPalette(QApplication.style().standardPalette())
 
 if __name__ == '__main__':
-    app = App()
-    app.mainloop()
+    app = QApplication(sys.argv)
+    win = MainWindow()
+    win.show()
+    sys.exit(app.exec_())
