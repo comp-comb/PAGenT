@@ -207,10 +207,10 @@ def plot_clusters(cluster_df, cluster_id,
 
     # Draw base: TEM background + circles
     fig, ax = plt.subplots(figsize=(w/dpi,h/dpi), dpi=dpi)
-    # if tem_style:
-    #     bg = generate_hrtem_noise_image(w,h,tem_mean,tem_std)
-    #     ax.imshow(bg, cmap='gray', origin='lower',
-    #               extent=[-w/2,w/2,-h/2,h/2], interpolation='nearest')
+    if tem_style and 'combined' in noise_types:
+        bg = generate_hrtem_noise_image(w,h,tem_mean,tem_std)
+        ax.imshow(bg, cmap='gray', origin='lower',
+                  extent=[-w/2,w/2,-h/2,h/2], interpolation='nearest')
     for row in cluster_df.itertuples():
         ax.add_patch(Circle((row.x,row.y), row.Radius,
                             color=tem_color, fill=True, linewidth=0))
@@ -296,7 +296,7 @@ def plot_clusters(cluster_df, cluster_id,
                 count_map[circle] += 1
 
             # 5) Generate your “particle” noise image
-            pn = generate_hrtem_noise_image(w, h, tem_mean*0.3, tem_std*1.2)/255.0
+            pn = generate_hrtem_noise_image(w, h, tem_mean*0.4, tem_std*1.2)/255.0
 
             # 6) Compute an *interior alpha map* that darkens with overlap count.
             #    e.g. base_alpha = 0.6 for single‑layer, then alpha = base_alpha*count
@@ -307,7 +307,7 @@ def plot_clusters(cluster_df, cluster_id,
 
             # 7) Blend particle noise in with per‑pixel alpha
             ai = interior_alpha[...,None]  # shape (h,w,1)
-            out = out*(1-ai) + pn[...,None]*ai
+            out = out*(1-ai) + pn[...,None] *ai
 
             # 8) Clamp
             out = np.clip(out, 0, 1)
