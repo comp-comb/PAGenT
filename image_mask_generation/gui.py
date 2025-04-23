@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Cluster Mask & Noise GUI")
         self.status = self.statusBar()
         # default TEM color
-        r, g, b, a = [int(0.045*255)]*3 + [int(0.3*255)]
+        r, g, b, a = [int(0.045 * 255)] * 3 + [int(0.3 * 255)]
         self.tem_color = QColor(r, g, b, a)
         self.initUI()
 
@@ -115,6 +115,8 @@ class MainWindow(QMainWindow):
         row.addWidget(self.gauss_cb)
         self.poisson_cb = QCheckBox("Poisson")
         row.addWidget(self.poisson_cb)
+        self.combined_cb = QCheckBox("Combined")
+        row.addWidget(self.combined_cb)
         self.tem_cb = QCheckBox("TEM-like")
         row.addWidget(self.tem_cb)
         layout.addLayout(row)
@@ -122,10 +124,16 @@ class MainWindow(QMainWindow):
         # TEM params
         row = QHBoxLayout()
         row.addWidget(QLabel("TEM Mean:"))
-        self.temMeanSpin = QSpinBox(); self.temMeanSpin.setRange(0,255); self.temMeanSpin.setValue(180); self.temMeanSpin.setEnabled(False)
+        self.temMeanSpin = QSpinBox()
+        self.temMeanSpin.setRange(0, 255)
+        self.temMeanSpin.setValue(180)
+        self.temMeanSpin.setEnabled(False)
         row.addWidget(self.temMeanSpin)
         row.addWidget(QLabel("TEM Std:"))
-        self.temStdSpin = QSpinBox(); self.temStdSpin.setRange(0,100); self.temStdSpin.setValue(25); self.temStdSpin.setEnabled(False)
+        self.temStdSpin = QSpinBox()
+        self.temStdSpin.setRange(0, 100)
+        self.temStdSpin.setValue(25)
+        self.temStdSpin.setEnabled(False)
         row.addWidget(self.temStdSpin)
         layout.addLayout(row)
         self.tem_cb.toggled.connect(self.temMeanSpin.setEnabled)
@@ -180,7 +188,7 @@ class MainWindow(QMainWindow):
         d = QFileDialog.getExistingDirectory(self, "Select Working Dir", os.getcwd())
         if d:
             self.rootLineEdit.setText(d)
-            self.xmlLineEdit.setText(os.path.join(d,'xmls')+os.sep)
+            self.xmlLineEdit.setText(os.path.join(d, 'xmls') + os.sep)
 
     def browse_xml(self):
         d = QFileDialog.getExistingDirectory(self, "Select XML Dir", os.getcwd())
@@ -189,33 +197,36 @@ class MainWindow(QMainWindow):
 
     def start(self):
         self.runButton.setEnabled(False)
-        self.logText.clear(); self.status.showMessage("Pipeline started...")
+        self.logText.clear()
+        self.status.showMessage("Pipeline started...")
         ROOT = self.rootLineEdit.text()
         xml = self.xmlLineEdit.text()
         prefix = self.beginLineEdit.text()
         suffix = self.endLineEdit.text()
-        outCSV = os.path.join(ROOT,'data.csv')
-        maskDir = os.path.join(ROOT,'masks')+os.sep
-        imgDir = os.path.join(ROOT,'images')+os.sep
-        noisyDir = os.path.join(ROOT,'noisyoutput')+os.sep
-        mtypes = []
-        if self.particleCheck.isChecked(): mtypes.append('particle')
-        if self.clusterCheck.isChecked(): mtypes.append('cluster')
-        maskType = 'both' if len(mtypes)==2 else (mtypes[0] if mtypes else '')
-        nTypes = []
-        if self.gauss_cb.isChecked(): nTypes.append('gauss')
-        if self.poisson_cb.isChecked(): nTypes.append('poisson')
-        if self.tem_cb.isChecked(): nTypes.append('tem')
+        outCSV = os.path.join(ROOT, 'data.csv')
+        maskDir = os.path.join(ROOT, 'masks') + os.sep
+        imgDir = os.path.join(ROOT, 'images') + os.sep
+        noisyDir = os.path.join(ROOT, 'noisyoutput') + os.sep
+        types = []
+        if self.particleCheck.isChecked(): types.append('particle')
+        if self.clusterCheck.isChecked(): types.append('cluster')
+        maskType = 'both' if len(types) == 2 else (types[0] if types else '')
+        noise_types = []
+        if self.gauss_cb.isChecked():    noise_types.append('gauss')
+        if self.poisson_cb.isChecked():  noise_types.append('poisson')
+        if self.combined_cb.isChecked(): noise_types.append('combined')
+        if self.tem_cb.isChecked():      noise_types.append('tem')
         temStyle = self.tem_cb.isChecked()
-        temMean = self.temMeanSpin.value()
-        temStd  = self.temStdSpin.value()
-        c = self.tem_color
-        temColor = (c.red()/255.0, c.green()/255.0, c.blue()/255.0, c.alpha()/255.0)
+        temMean  = self.temMeanSpin.value()
+        temStd   = self.temStdSpin.value()
+        c        = self.tem_color
+        temColor = (c.red()/255.0, c.green()/255.0,
+                    c.blue()/255.0, c.alpha()/255.0)
 
         self.worker = PipelineWorker(
             xml, prefix, suffix,
             outCSV, maskDir, imgDir, noisyDir,
-            maskType, nTypes,
+            maskType, noise_types,
             temStyle, temMean, temStd, temColor
         )
         self.thread = QThread()
